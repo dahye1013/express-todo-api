@@ -21,3 +21,7 @@ MongoClient.connect(url.mongoUrl, function (error, client) {
     console.log(`listening on 8080`);
   });
 });
+
+app.get("/", function (req, res) {
+  res.sendFile(__dirname + "/index.html");
+});
