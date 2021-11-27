@@ -22,6 +22,11 @@ const MongoClient = require("mongodb").MongoClient;
 var db;
 const url = require("./store");
 
+/**
+ * [EJS Setting]
+ */
+app.set("view engine", "ejs");
+
 MongoClient.connect(url.mongoUrl, function (error, client) {
   if (error) return console.log(error);
 
@@ -42,4 +47,12 @@ app.post("/add", function (req, res) {
     console.log("success adding");
   });
   res.send("TODO 전송 완료");
+});
+
+app.get("/list", function (req, res) {
+  db.collection("post")
+    .find()
+    .toArray(function (err, result) {
+      res.render("list.ejs", { todos: result });
+    });
 });
