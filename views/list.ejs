@@ -65,12 +65,6 @@
 
     <!-- todo list : get from server -->
     <h4 class="ml-2 my-3">TODO List</h4>
-    <!-- <% for (const todo of todos) { %>
-    <h4><%= todo.title %></h4>
-    <p><%= todo.date %></p>
-    <button>delete</button>
-    <% } %> -->
-
     <ul class="list-group">
       <% for (const todo of todos) { %>
       <li class="list-group-item" data-id="<%= todo._id %>">
@@ -91,23 +85,21 @@
       </li>
       <% } %>
     </ul>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
     <script>
-      document.querySelector(".list-group").addEventListener("click", (e) => {
+      const $ = (selector) => document.querySelector(selector);
+      const baseURL = "http://localhost:8080";
+
+      $(".list-group").addEventListener("click", (e) => {
         if (e.target.classList.contains("btn-delete")) {
           const todoId = e.target.closest("li").dataset.id;
-          $.ajax({
+
+          fetch(`${baseURL}/delete`, {
             method: "DELETE",
-            url: "/delete",
-            data: { _id: todoId },
-          })
-            .done((result) => {
-              document
-                .querySelector(".list-group")
-                .removeChild(e.target.closest("li"));
-            })
-            .fail((err) => {});
+            body: JSON.stringify({ data: { _id: todoId } }),
+          }).then((res) => {
+            $(".list-group").removeChild(e.target.closest("li"));
+          });
         }
       });
     </script>
