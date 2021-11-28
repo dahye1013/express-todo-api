@@ -26,6 +26,7 @@ let collection = {
   COUNTER: "counter",
 };
 const url = require("./store");
+const { Collection } = require("mongodb");
 
 /**
  * [EJS Setting]
@@ -84,7 +85,14 @@ app.post("/add", async (req, res) => {
     console.log(err, " - fail to update posts counter");
   }
 
-  res.send("TODO 전송 완료");
+  //4. move to list page
+  db.collection(collection.POST)
+    .find()
+    .toArray((err, result) => {
+      if (err) return console.log(err);
+      res.render("list.ejs", { todos: result });
+    });
+  //  res.send("TODO 전송 완료");
 });
 
 app.get("/list", (req, res) => {
@@ -103,6 +111,16 @@ app.delete("/delete", (req, res) => {
     (error, result) => {
       console.log("success delete");
       res.status(200).send({ message: "성공했습니다." });
+    }
+  );
+});
+
+app.get("/detail/:id", (req, res) => {
+  db.collection(collection.POST).findOne(
+    { _id: parseInt(req.params.id) },
+    (err, result) => {
+      if (err) return console.log(err);
+      res.render("detail.ejs", { data: result });
     }
   );
 });
