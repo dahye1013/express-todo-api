@@ -19,7 +19,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
  * - mogoDB
  */
 const MongoClient = require("mongodb").MongoClient;
-var db;
+let db;
+let clinet = "todoapp";
+let collection = {
+  POST: "post",
+  COUNTER: "counter",
+};
 const url = require("./store");
 
 /**
@@ -30,7 +35,7 @@ app.set("view engine", "ejs");
 MongoClient.connect(url.mongoUrl, (err, client) => {
   if (err) return console.log(err);
 
-  db = client.db("todoapp"); // database명 할당;
+  db = client.db(clinet); // database명 할당;
 
   app.listen(8080, () => {
     console.log(`listening on 8080`);
@@ -47,7 +52,9 @@ app.post("/add", async (req, res) => {
 
   //1. find counter
   try {
-    const data = await db.collection("counter").findOne({ name: "totalPosts" });
+    const data = await db
+      .collection(collection.COUNTER)
+      .findOne({ name: "totalPosts" });
     totPostsCount = data.totalPostCount;
   } catch (err) {
     console.error(err, " - fail to get total posts counter");
@@ -55,7 +62,7 @@ app.post("/add", async (req, res) => {
 
   //2. insert todo
   try {
-    await db.collection("post").insertOne({
+    await db.collection(collection.POST).insertOne({
       _id: ++totPostsCount,
       title,
       date,
@@ -67,7 +74,7 @@ app.post("/add", async (req, res) => {
 
   //3. update counter
   try {
-    await db.collection("counter").updateOne(
+    await db.collection(collection.COUNTER).updateOne(
       { name: "totalPosts" },
       //monggo db 내장 증감 연산자
       { $inc: { totalPostCount: 1 } },
@@ -81,7 +88,7 @@ app.post("/add", async (req, res) => {
 });
 
 app.get("/list", (req, res) => {
-  db.collection("post")
+  db.collection(collection.POST)
     .find()
     .toArray(function (err, result) {
       if (err) return console.log(err);
@@ -91,8 +98,11 @@ app.get("/list", (req, res) => {
 
 app.delete("/delete", (req, res) => {
   const { _id } = req.body;
-  db.collection("post").deleteOne({ _id: parseInt(_id) }, (error, result) => {
-    console.log("success delete");
-    res.status(200).send({ message: "성공했습니다." });
-  });
+  db.collection(collection.POST).deleteOne(
+    { _id: parseInt(_id) },
+    (error, result) => {
+      console.log("success delete");
+      res.status(200).send({ message: "성공했습니다." });
+    }
+  );
 });
