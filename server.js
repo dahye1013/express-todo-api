@@ -59,6 +59,7 @@ app.post("/add", async (req, res) => {
       _id: ++totPostsCount,
       title,
       date,
+      delYn: "N",
     });
   } catch (err) {
     console.error(err, " - fail to insert");
@@ -86,4 +87,12 @@ app.get("/list", (req, res) => {
       if (err) return console.log(err);
       res.render("list.ejs", { todos: result });
     });
+});
+
+app.delete("/delete", (req, res) => {
+  const { _id } = req.body;
+  db.collection("post").deleteOne({ _id: parseInt(_id) }, (error, result) => {
+    console.log("success delete");
+    res.status(200).send({ message: "성공했습니다." });
+  });
 });
