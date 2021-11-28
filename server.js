@@ -27,55 +27,63 @@ const url = require("./store");
  */
 app.set("view engine", "ejs");
 
-MongoClient.connect(url.mongoUrl, function (error, client) {
-  if (error) return console.log(error);
+MongoClient.connect(url.mongoUrl, (err, client) => {
+  if (err) return console.log(err);
 
   db = client.db("todoapp"); // database명 할당;
 
-  app.listen(8080, function () {
+  app.listen(8080, () => {
     console.log(`listening on 8080`);
   });
 });
 
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-app.post("/add", async function (req, res) {
+app.post("/add", async (req, res) => {
   const { title, date } = req.body;
-  let totPostsCount = await db
-    .collection("counter")
-    .findOne({ name: "totalPosts" }, function (err, result) {
-      let totPostsCount = result.totalPostCount;
-      console.log(result.totalPostCount);
+  let totPostsCount;
 
-      db.collection("post").insertOne(
-        {
-          _id: totPostsCount++,
-          title,
-          date,
-        },
-        function (err, ok) {
-          console.log("success adding");
-          db.collection("counter").updateOne(
-            { name: "totalPosts" },
-            //증감 연산자
-            { $inc: { totalPostCount: 1 } },
-            { totalPostCount: 1 },
-            function (err, result) {
-              if (err) return console.log(err);
-            }
-          );
-        }
-      );
+  //1. find counter
+  try {
+    const data = await db.collection("counter").findOne({ name: "totalPosts" });
+    totPostsCount = data.totalPostCount;
+  } catch (err) {
+    console.error(err, " - fail to get total posts counter");
+  }
+
+  //2. insert todo
+  try {
+    await db.collection("post").insertOne({
+      _id: ++totPostsCount,
+      title,
+      date,
     });
+  } catch (err) {
+    console.error(err, " - fail to insert");
+  }
+
+  //3. update counter
+  try {
+    await db.collection("counter").updateOne(
+      { name: "totalPosts" },
+      //monggo db 내장 증감 연산자
+      { $inc: { totalPostCount: 1 } },
+      { totalPostCount: 1 }
+    );
+  } catch (err) {
+    console.log(err, " - fail to update posts counter");
+  }
+
   res.send("TODO 전송 완료");
 });
 
-app.get("/list", function (req, res) {
+app.get("/list", (req, res) => {
   db.collection("post")
     .find()
     .toArray(function (err, result) {
+      if (err) return console.log(err);
       res.render("list.ejs", { todos: result });
     });
 });
